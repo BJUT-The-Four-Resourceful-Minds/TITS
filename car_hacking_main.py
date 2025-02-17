@@ -2,7 +2,8 @@ import torch
 from torch import nn, optim
 from torch.utils.data import ConcatDataset, random_split, DataLoader
 
-from car_hacking_processing.timeseries_dataset import TimeSeriesDataset
+from data_processing import car_hacking_process_data
+from data_processing.timeseries_dataset import TimeSeriesDataset
 from module.LSTM import LSTMAutoencoder, train_model
 
 # setting
@@ -22,10 +23,10 @@ RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
 gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
 
 normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
-DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path,window_size)
-RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path,window_size)
-gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path,window_size)
-Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path,window_size)
+DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
+RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
+gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
+Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
 
 print('数据读取完成')
 
