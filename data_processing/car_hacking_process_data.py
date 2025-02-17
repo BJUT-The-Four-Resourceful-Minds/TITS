@@ -15,7 +15,7 @@ def clean_data(data):
     return data_new
 
 
-def process_data(file_path):
+def car_hacking_process_data(file_path):
     if 'txt' in file_path:
         file = pd.read_csv(file_path, header=None, sep=r'\s+')
         file = file.loc[:, [1, 3] + list(range(6, 15))]
@@ -63,6 +63,6 @@ def process_data(file_path):
 if __name__ == '__main__':
     file_path_txt = r'../Car-Hacking Dataset/normal_run_data/normal_run_data.txt'
     file_path_csv = r"..\Car-Hacking Dataset\gear_dataset.csv"
-    feature, label = process_data(file_path_csv)
+    feature, label = car_hacking_process_data(file_path_csv)
     print(len(label))
     print(label)
