@@ -12,7 +12,7 @@ from data_processing.nb15_process_data import nb15_process_data
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, file_path, window_size):
-        if 'Car_hacking' in file_path:
+        if 'Car-Hacking' in file_path:
             features, label = car_hacking_process_data(file_path)
             features = np.array(features)
         elif 'NB15' in file_path:
