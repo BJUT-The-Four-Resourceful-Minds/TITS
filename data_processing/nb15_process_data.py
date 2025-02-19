@@ -15,6 +15,9 @@ def nb15_process_data(file_path):
     file = file_csv.iloc[:, [0, 2, 6, 7, 16, 28]]
 
     file = file.dropna(axis=0)
+    #对文件进行排序和重新编号
+    file = file.sort_values(by=28)
+    file = file.reset_index(drop=True)
     # 初始化结果列表
     result = []
     # 获取起始时间和结束时间
@@ -45,10 +48,12 @@ def nb15_process_data(file_path):
         result.append(temp_res)
 
         # 更新时间
-        t += 3
+        file=file[~mask]
+        file = file.reset_index(drop=True)
+        t = file.loc[0, 28]
 
         # 如果时间超过结束时间，则退出循环
-        if t > t_end:
+        if t+3 > t_end:
             break
     final_result = np.array(result)
     print('read over')
