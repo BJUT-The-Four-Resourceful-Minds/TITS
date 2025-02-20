@@ -1,11 +1,5 @@
-import time
-
 import pandas as pd
-import torch
 import numpy as np
-
-
-#file_path = r".\unsw-nb15\versions\1\UNSW-NB15_1.csv"
 
 
 def nb15_process_data(file_path):
@@ -59,7 +53,3 @@ def nb15_process_data(file_path):
     print('read over')
     print(len(final_result))
     return final_result
-
-#调用函数获得最终结果
-#final=process_data(file_path)
-#print(type(final))

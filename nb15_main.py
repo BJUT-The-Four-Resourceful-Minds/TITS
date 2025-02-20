@@ -3,8 +3,9 @@ from torch.utils.data import random_split, DataLoader, ConcatDataset
 import torch
 from data_processing.timeseries_dataset import TimeSeriesDataset
 from module.LSTM import LSTMAutoencoder, train_model
+from value_display import value_display
 
-# setting
+# module setting
 batch_size = 50
 hidden_size = 100
 epoch = 400
@@ -36,3 +37,4 @@ model = LSTMAutoencoder(input_size, hidden_size, num_layers)
 criterion = nn.L1Loss()
 optimizer = optim.SGD(model.parameters(), lr=0.001)
 train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
+value_display(model, test_loader)

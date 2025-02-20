@@ -1,12 +1,11 @@
 import torch
 from torch import nn, optim
 from torch.utils.data import ConcatDataset, random_split, DataLoader
-
-from data_processing import car_hacking_process_data
 from data_processing.timeseries_dataset import TimeSeriesDataset
 from module.LSTM import LSTMAutoencoder, train_model
+from value_display import value_display
 
-# setting
+# module setting
 batch_size = 100
 hidden_size = 100
 epoch = 400
@@ -45,4 +44,5 @@ test_loader = DataLoader(test_dataset, batch_size, shuffle=True)
 model = LSTMAutoencoder(input_size, hidden_size, num_layers)
 criterion = nn.L1Loss()
 optimizer = optim.SGD(model.parameters(), lr=0.001)
-train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
+model = train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
+value_display(model, test_loader)
