@@ -1,5 +1,6 @@
 import numpy as np
 
+# 将特征提取后的数据进行似然变换和归一化
 
 def likelihood_transformation(X):
     M, N = X.shape  #得到输入数据矩阵的形状（即行数和列数）

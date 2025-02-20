@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 
+# 针对car_hacking Dataset的数据进行数据清洗
 def clean_data(data):
     data = data.dropna(axis=0)
     data_new = data
@@ -14,7 +15,7 @@ def clean_data(data):
     data_new.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]] = data.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]]
     return data_new
 
-
+# 对car_hacking Dataset数据进行预处理和特征提取
 def car_hacking_process_data(file_path):
     if 'txt' in file_path:
         file = pd.read_csv(file_path, header=None, sep=r'\s+')

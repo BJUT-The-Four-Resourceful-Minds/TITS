@@ -6,7 +6,7 @@ from NLT.NLT_main import likelihood_transformation
 from data_processing.car_hacking_process_data import car_hacking_process_data
 from data_processing.nb15_process_data import nb15_process_data
 
-
+# 将特征提取后的数据转变为可供训练的Dataset类
 class TimeSeriesDataset(Dataset):
     def __init__(self, file_path, window_size):
         if 'Car-Hacking' in file_path:
@@ -27,6 +27,7 @@ class TimeSeriesDataset(Dataset):
 
         features = features.reshape(len(features), 1)
 
+        # 滑动窗口为10
         dataset_x, dataset_y = [], []
         for i in range(len(features) - window_size):
             _x = features[i:(i + 10)]
