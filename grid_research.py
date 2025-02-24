@@ -1,100 +1,163 @@
-import numpy as np
 import torch
+import numpy as np
 from torch import nn
 from module.LSTM import LSTMAutoencoder
 from torch.utils.data import random_split, DataLoader
 from data_processing.timeseries_dataset import TimeSeriesDataset
-from SimpleSubset import SimpleSubset
-from CustomConcatDataset import SimpleConcatDataset
-from CustomDataset import CustomDataset
-from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, roc_curve,auc
-import matplotlib.pyplot as plt
+from CustomClass import SimpleConcatDataset, SimpleSubset, CustomDataset
+from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
+
+
+def AUC(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    tpr = tp / (tp + fn)
+    fpr = fp / (fp + tn)
+    return np.sqrt((1 - tpr) ** 2 + fpr ** 2)
+
 
 def g_mean(y_true, y_pred):
-    # 计算混淆矩阵
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    # 计算真正率
     tpr = tp / (tp + fn)
-    # 计算假正率
     fpr = fp / (fp + tn)
-    # 计算 G-Mean
     return np.sqrt(tpr * (1 - fpr))
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-criterion = nn.L1Loss()
-# module setting
-batch_size = 100
-hidden_size = 100
-input_size = 1
-num_layers = 2
-window_size = 10
 
-print("a")#数据生成
-# 从 DataLoader 中提取数据并转换为 numpy 数组
-normal_run_path = r'.\Car-Hacking Dataset\normal_run_data\normal_run_data.txt'
-DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
-Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
-RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
-gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
+def load_datasets(window_size):
+    normal_run_path = r'.\Car-Hacking Dataset\normal_run_data\normal_run_data.txt'
+    DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
+    Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
+    RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
+    gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
 
-normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
-DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
-RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
-gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
-Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
-print("b")
+    normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
+    DoS_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
+    RPM_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
+    gear_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
+    Fuzzy_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
 
-car_hacking_dataset = SimpleConcatDataset(
-    [normal_run_dataset, DoS_dataset_dataset, RPM_dataset_dataset, gear_dataset_dataset, Fuzzy_dataset_dataset])
+    car_hacking_dataset = SimpleConcatDataset(
+        [normal_run_dataset, DoS_dataset, RPM_dataset, gear_dataset, Fuzzy_dataset])
 
-train_size = int(0.8 * len(car_hacking_dataset))
-test_size = len(car_hacking_dataset) - train_size
-# 使用 random_split 函数将数据集分割成训练集和测试集
-train_subset, test_subset = random_split(car_hacking_dataset, [train_size, test_size])
+    train_size = int(0.8 * len(car_hacking_dataset))
+    test_size = len(car_hacking_dataset) - train_size
+    train_subset, test_subset = random_split(car_hacking_dataset, [train_size, test_size])
 
-# 转换为支持 get_test_sample 的自定义子集
-train_dataset = SimpleSubset(train_subset.dataset, train_subset.indices)
-test_dataset = SimpleSubset(test_subset.dataset, test_subset.indices)
+    train_dataset = SimpleSubset(train_subset.dataset, train_subset.indices)
+    test_dataset = SimpleSubset(test_subset.dataset, test_subset.indices)
 
-train_loss_loader = DataLoader(train_dataset)
-print(len(train_loss_loader))
-#print(test_dataset.get_test_sample())
-X=[]
-Label=[]
-for i in range(len(train_dataset)):
-    x,label=train_dataset.get_test_sample(i)
-    X.append(x)
-    Label.append(label)
-#print(len(Label))
-train_label_loader = CustomDataset(X, Label)
-print(len(Label))
+    return train_dataset, test_dataset
 
 
-# 2. 初始化分类器
-model = LSTMAutoencoder(input_size, hidden_size, num_layers)
-model.load_state_dict(torch.load('model.pt'))
+def prepare_data_loaders(train_dataset):
+    train_loss_loader = DataLoader(train_dataset)
+    X = []
+    Label = []
+    for i in range(len(train_dataset)):
+        x, label = train_dataset.get_test_sample(i)
+        X.append(x)
+        Label.append(label)
+    train_label_loader = CustomDataset(X, Label)
+    return train_loss_loader, train_label_loader, Label
 
-# 3. 修改参数网格
-params_grid = {'threshold': np.arange(0.05, 0.96, 0.001)}
-def test_model(model,loss_dataloader, criterion, device):
+
+def test_model(model, loss_dataloader, criterion, device):
     model.to(device)
-    loss_list=[]
-    for X,X_next in loss_dataloader:
-        X_next_hat=model(X)
-        loss=criterion(X_next,X_next_hat)
+    loss_list = []
+    for X, X_next in loss_dataloader:
+        X_next_hat = model(X)
+        loss = criterion(X_next, X_next_hat)
         loss_list.append(loss)
     return loss_list
 
-Loss=test_model(model,train_loss_loader, criterion,device)
 
-Label_hat=[]
-for threshold in params_grid['threshold']:
-    for loss in Loss:
-        if loss >= threshold:
-            label_hat=0
-        else:
-            label_hat=1
-        Label_hat.append(label_hat)
+def generate_predictions(Loss, params_grid):
+    Label_hat = []
+    for threshold in params_grid['threshold']:
+        row = []
+        for loss in Loss:
+            if loss >= threshold:
+                label_hat = 0
+            else:
+                label_hat = 1
+            row.append(label_hat)
+        Label_hat.append(row)
+    Label_hat_np = np.array(Label_hat)
+    return Label_hat_np
 
-Label_hat_np=np.array(Label_hat)
-Label_hat_np.reshape(len(params_grid['threshold']),-1)
+
+def evaluate_metrics(Label, Label_hat, params_grid):
+    best_accuracy = 0
+    best_accuracy_threshold = 0
+    best_f1 = 0
+    best_f1_threshold = 0
+    best_gmean = 0
+    best_gmean_threshold = 0
+
+    for i, label_hat in enumerate(Label_hat):
+        accuracy = accuracy_score(Label, label_hat)
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            best_accuracy_threshold = params_grid['threshold'][i]
+
+        f1 = f1_score(Label, label_hat)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_f1_threshold = params_grid['threshold'][i]
+
+        gmean = g_mean(Label, label_hat)
+        if gmean > best_gmean:
+            best_gmean = gmean
+            best_gmean_threshold = params_grid['threshold'][i]
+
+    print("准确率最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_accuracy, best_accuracy_threshold))
+    print("F1 分数最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_f1, best_f1_threshold))
+    print("G - Mean 最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_gmean, best_gmean_threshold))
+
+
+def calculate_AUC_distance(Label, Label_hat, params_grid):
+    AUC_distance = []
+    for i in range(len(params_grid['threshold'])):
+        AUC_distance.append(AUC(Label, Label_hat[i]))
+    AUC_min = min(AUC_distance)
+    AUC_index = np.argmin(AUC_distance)
+    print(AUC_distance)
+    print(f"最小值是 {AUC_min}，对应的索引是 {AUC_index}")
+    print(params_grid['threshold'][AUC_index])
+
+
+def main():
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    criterion = nn.L1Loss()
+
+    hidden_size = 100
+    input_size = 1
+    num_layers = 2
+    window_size = 10
+
+    params_grid = {'threshold': np.arange(0.05, 0.96, 0.01)}
+
+    # 加载数据集
+    train_dataset, test_dataset = load_datasets(window_size)
+
+    # 准备数据加载器
+    train_loss_loader, train_label_loader, Label = prepare_data_loaders(train_dataset)
+
+    # 初始化分类器
+    model = LSTMAutoencoder(input_size, hidden_size, num_layers)
+    model.load_state_dict(torch.load('model.pt'))
+
+    # 测试模型并获取损失列表
+    Loss = test_model(model, train_loss_loader, criterion, device)
+
+    # 生成预测结果
+    Label_hat_np = generate_predictions(Loss, params_grid)
+
+    # 评估指标
+    evaluate_metrics(Label, Label_hat_np, params_grid)
+
+    # 计算 AUC 距离
+    calculate_AUC_distance(Label, Label_hat_np, params_grid)
+
+
+if __name__ == "__main__":
+    main()
