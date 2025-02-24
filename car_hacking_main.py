@@ -46,3 +46,7 @@ criterion = nn.L1Loss()
 optimizer = optim.SGD(model.parameters(), lr=0.001)
 model = train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
 value_display(model, test_loader)
+
+#保存模型，后面直接在其他文件读取训练好的模型
+torch.save(model.state_dict(), 'model.pt')
+print('Done')
