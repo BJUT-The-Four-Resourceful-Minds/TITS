@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 # 针对car_hacking Dataset的数据进行数据清洗
@@ -14,6 +14,7 @@ def clean_data(data):
         print(data)
     data_new.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]] = data.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]]
     return data_new
+
 
 # 对car_hacking Dataset数据进行预处理和特征提取
 def car_hacking_process_data(file_path):
@@ -43,7 +44,7 @@ def car_hacking_process_data(file_path):
     while t <= t_end:
         temp_data = []
         while index < len(data_array) and data_array[index][0] < t + 3:
-            temp_data.append(data_array[index][[1] + list(range(3, 3+int(data_array[index][2])))])
+            temp_data.append(data_array[index][[1] + list(range(3, 3 + int(data_array[index][2])))])
             if attack and data_array[index][-1] == 'T':
                 flag = 0
             index += 1

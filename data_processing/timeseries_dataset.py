@@ -1,10 +1,12 @@
-import torch
-from torch.utils.data import Dataset
 import numpy as np
+import torch
+from torch.utils.data import Dataset, random_split
 
 from NLT.NLT_main import likelihood_transformation
 from data_processing.car_hacking_process_data import car_hacking_process_data
 from data_processing.nb15_process_data import nb15_process_data
+from model_test.CustomClass import SimpleConcatDataset
+
 
 # 将特征提取后的数据转变为可供训练的Dataset类
 class TimeSeriesDataset(Dataset):
@@ -59,3 +61,29 @@ class TimeSeriesDataset(Dataset):
             return self.X, self.label
         return self.X[index], self.label[index]
 
+def loading_car_hacking(window_size):
+    print("loading data")
+    normal_run_path = r'.\Car-Hacking Dataset\normal_run_data\normal_run_data.txt'
+    DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
+    Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
+    RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
+    gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
+
+    normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
+    DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
+    RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
+    gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
+    Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
+
+    print('loading success')
+
+    car_hacking_dataset = SimpleConcatDataset(
+        [normal_run_dataset, DoS_dataset_dataset, RPM_dataset_dataset, gear_dataset_dataset, Fuzzy_dataset_dataset])
+
+    # car_hacking_dataset = normal_run_dataset
+
+    train_size = int(0.8 * len(car_hacking_dataset))
+    test_size = len(car_hacking_dataset) - train_size
+    # 使用 random_split 函数将数据集分割成训练集和测试集
+    train_dataset, train_dataset = random_split(car_hacking_dataset, [train_size, test_size])
+    return train_dataset, train_dataset
