@@ -17,7 +17,7 @@ class TimeSeriesDataset(Dataset):
         elif 'NB15' in file_path:
             path = r".\unsw-nb15\versions\1\UNSW-"
             print(f"loading {file_path}")
-            features,label = nb15_process_data(f"{path}{file_path}.csv")
+            features, label = nb15_process_data(f"{path}{file_path}.csv")
             mask = np.isnan(features)
             mask = mask.any(axis=1)
             features = features[~mask]
@@ -31,14 +31,14 @@ class TimeSeriesDataset(Dataset):
 
         # 滑动窗口为10
         dataset_x, dataset_y = [], []
-        dataset_label=[]
+        dataset_label = []
         for i in range(len(features) - window_size):
             _x = features[i:(i + 10)]
             dataset_x.append(_x)
             dataset_y.append(features[i + window_size])
             # label中1是正常0是攻击
             for j in range(window_size):
-                if(label[i + j] == 0):#10个中只要有一个为攻击则标记为攻击
+                if (label[i + j] == 0):  #10个中只要有一个为攻击则标记为攻击
                     dataset_label.append(0)
                 else:
                     dataset_label.append(1)
@@ -47,7 +47,7 @@ class TimeSeriesDataset(Dataset):
         self.X = torch.tensor(dataset_x, dtype=torch.float32)
         self.y = torch.tensor(dataset_y, dtype=torch.float32)
 
-        self.label=torch.tensor(dataset_label, dtype=torch.float32)
+        self.label = torch.tensor(dataset_label, dtype=torch.float32)
 
     def __len__(self):
         return len(self.y)
@@ -56,10 +56,11 @@ class TimeSeriesDataset(Dataset):
         return self.X[index], self.y[index]
 
     #用于返回（X,label） 用来与判断出的类别比对
-    def get_test_sample(self, index=None):#我想实现默认不输入时返回整个列表，但是不传入index时总是报错
+    def get_test_sample(self, index=None):  #我想实现默认不输入时返回整个列表，但是不传入index时总是报错
         if index is None:
             return self.X, self.label
         return self.X[index], self.label[index]
+
 
 def loading_car_hacking(window_size):
     print("loading data")
@@ -87,3 +88,23 @@ def loading_car_hacking(window_size):
     # 使用 random_split 函数将数据集分割成训练集和测试集
     train_dataset, train_dataset = random_split(car_hacking_dataset, [train_size, test_size])
     return train_dataset, train_dataset
+
+
+def loading_nb15(window_size):
+    NB15_1 = "NB15_1"
+    NB15_2 = "NB15_2"
+    NB15_3 = "NB15_3"
+    NB15_4 = "NB15_4"
+
+    nb15_1 = TimeSeriesDataset(NB15_1, 10)
+    nb15_2 = TimeSeriesDataset(NB15_2, 10)
+    nb15_3 = TimeSeriesDataset(NB15_3, 10)
+    nb15_4 = TimeSeriesDataset(NB15_4, 10)
+
+    nb15_dataset = SimpleConcatDataset([nb15_1, nb15_2, nb15_3, nb15_4])
+
+    train_size = int(0.8 * len(nb15_dataset))
+    test_size = len(nb15_dataset) - train_size
+    # 使用 random_split 函数将数据集分割成训练集和测试集
+    train_dataset, test_dataset = random_split(nb15_dataset, [train_size, test_size])
+    return train_dataset, test_dataset
