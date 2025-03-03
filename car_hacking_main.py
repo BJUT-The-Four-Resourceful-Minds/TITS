@@ -17,7 +17,7 @@ if __name__ == '__main__':
     window_size = 10
     input_size = 1
     num_layers = 2
-    learning_rate=0.001
+    learning_rate = 0.001
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     module_file = 'car_hacking_module.pt'
 
@@ -27,11 +27,11 @@ if __name__ == '__main__':
         train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size, shuffle=True)
         model = LSTMAutoencoder(input_size, hidden_size, num_layers)
-        criterion = nn.L1Loss()
+        criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
         model = train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
         value_display(model, test_loader)
         #保存模型，后面直接在其他文件读取训练好的模型
         torch.save(model.state_dict(), module_file)
         print('training Done')
-    grid_research(test_dataset,module_file)
+    grid_research(test_dataset, module_file)

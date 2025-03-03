@@ -28,7 +28,7 @@ if __name__ == '__main__':
         train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size, shuffle=True)
         model = LSTMAutoencoder(input_size, hidden_size, num_layers)
-        criterion = nn.L1Loss()
+        criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
         train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
         value_display(model, test_loader)
