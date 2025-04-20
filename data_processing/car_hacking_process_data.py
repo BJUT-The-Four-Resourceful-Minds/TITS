@@ -4,15 +4,12 @@ import pandas as pd
 
 # 针对car_hacking Dataset的数据进行数据清洗
 def clean_data(data):
-    data = data.dropna(axis=0)
+    # data = data.dropna(axis=0) // 该操作将有用信息全部删除了
     data_new = data
     data = data.astype(str)
-
-    try:
-        data = data.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]].apply(lambda col: col.map(lambda x: int(x, 16)))
-    except ValueError:
-        print(data)
     data_new.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]] = data.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]]
+    data_new = data_new.iloc[:, 0:3]
+    data_new = data_new.dropna(axis=0)
     return data_new
 
 
@@ -43,18 +40,20 @@ def car_hacking_process_data(file_path):
     label = []
     while t <= t_end:
         temp_data = []
+        temp_dlc = []
         while index < len(data_array) and data_array[index][0] < t + 3:
-            temp_data.append(data_array[index][[1] + list(range(3, 3 + int(data_array[index][2])))])
+            temp_data.append(data_array[index][1])
+            # print(data_array[index][2])
+            temp_dlc.append(data_array[index][2])
             if attack and data_array[index][-1] == 'T':
                 flag = 0
             index += 1
 
         if temp_data:
             temp_data = np.array(temp_data)
-            temp_mac = temp_data[:][1:].ravel()
-            temp_res = [len(np.unique(temp_data[:][0])), np.mean(temp_mac), np.std(temp_mac)]
+            temp_dlc = np.array(temp_dlc)
+            temp_res = [len(np.unique(temp_data)), np.mean(temp_dlc), np.std(temp_dlc)]
             result.append(temp_res)
-
             label.append(flag)
             flag = 1
 

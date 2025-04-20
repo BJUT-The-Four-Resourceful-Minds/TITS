@@ -47,7 +47,6 @@ class TimeSeriesDataset(Dataset):
         self.X = torch.tensor(dataset_x, dtype=torch.float32)
         self.y = torch.tensor(dataset_y, dtype=torch.float32)
 
-        self.label = torch.tensor(dataset_label, dtype=torch.float32)
 
     def __len__(self):
         return len(self.y)
@@ -58,8 +57,8 @@ class TimeSeriesDataset(Dataset):
     #用于返回（X,label） 用来与判断出的类别比对
     def get_test_sample(self, index=None):  #我想实现默认不输入时返回整个列表，但是不传入index时总是报错
         if index is None:
-            return self.X, self.label
-        return self.X[index], self.label[index]
+            return self.X, self.y
+        return self.X[index], self.y[index]
 
 
 def loading_car_hacking(window_size):
