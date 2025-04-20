@@ -13,11 +13,11 @@ if __name__ == '__main__':
     # module setting
     batch_size = 50
     hidden_size = 100
-    epoch = 2000
+    epoch = 400
     window_size = 10
     input_size = 1
     num_layers = 2
-    learning_rate=0.001
+    learning_rate=0.01
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     module_file = 'nb15_module.pt'
 
@@ -35,4 +35,4 @@ if __name__ == '__main__':
         #保存模型，后面直接在其他文件读取训练好的模型
         torch.save(model.state_dict(), module_file)
         print('training Done')
-    grid_research(test_dataset,module_file)
+    # grid_research(test_dataset,module_file)

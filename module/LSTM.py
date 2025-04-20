@@ -11,9 +11,9 @@ class LSTMAutoencoder(nn.Module):
         # 通过编码器
         out, _ = self.encoder(x)
         # 取最后一个时间步的输出
-        out = out[:, -1, :]
+        out = out[:, -1]
         out = self.decoder(out)
-        out = self.sigmoid(out)
+        # out = self.sigmoid(out)
         return out
 
 
