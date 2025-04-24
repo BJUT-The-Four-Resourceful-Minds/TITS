@@ -8,17 +8,23 @@ from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
 
 
 def AUC(y_true, y_pred):  #计算AUC指标 输入真指标与预测指标两个列表 指标的集合含义是距离左上角的距离
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    tpr = tp / (tp + fn)
-    fpr = fp / (fp + tn)
-    return np.sqrt((1 - tpr) ** 2 + fpr ** 2)
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred,labels=[0,1]).ravel()
+    if(tp + fn==0 or fp + tn==0):
+        return 1
+    else:
+        tpr = tp / (tp + fn)
+        fpr = fp / (fp + tn)
+        return np.sqrt((1 - tpr) ** 2 + fpr ** 2)
 
 
 def g_mean(y_true, y_pred):  #计算G_Mean指标 输入真指标与预测指标两个列表
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    tpr = tp / (tp + fn)
-    fpr = fp / (fp + tn)
-    return np.sqrt(tpr * (1 - fpr))
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred,labels=[0,1]).ravel()
+    if(tp + fn==0 or fp + tn==0):
+        return 1
+    else:
+        tpr = tp / (tp + fn)
+        fpr = fp / (fp + tn)
+        return np.sqrt(tpr * (1 - fpr))
 
 
 def prepare_data_loaders(train_dataset):  #返回（X,Label)的数据集
@@ -45,7 +51,8 @@ def test_model(model, loss_dataloader, criterion, device):  #遍历训练集生�
     return loss_list
 
 
-def generate_predictions(Loss, params_grid):  #Label_hat_np的形状是（阈值个数，每个阈值判断条件下的判断结果的个数）
+def generate_predictions(Loss, params_grid):
+    #Label_hat_np的形状是（阈值个数，每个阈值判断条件下的判断结果的个数）
     Label_hat = []
     for threshold in params_grid['threshold']:
         row = []
@@ -57,10 +64,18 @@ def generate_predictions(Loss, params_grid):  #Label_hat_np的形状是（阈值
             row.append(label_hat)
         Label_hat.append(row)
     Label_hat_np = np.array(Label_hat)
+    #print(Label_hat_np.shape)#（91，734）
     return Label_hat_np
 
+def tolist(array):
+    my_list = []
+    for element in array:
+        my_list.append(element)
+    return my_list
 
-def evaluate_metrics(Label, Label_hat, params_grid):  #不同阈值中寻找，不同指标分别达到最大时阈值的值
+
+def evaluate_metrics(Label, Label_hat, params_grid):
+    #不同阈值中寻找，不同指标分别达到最大时阈值的值
     best_accuracy = 0
     best_accuracy_threshold = 0
     best_f1 = 0
@@ -68,7 +83,18 @@ def evaluate_metrics(Label, Label_hat, params_grid):  #不同阈值中寻找，�
     best_gmean = 0
     best_gmean_threshold = 0
 
+    # print(len(Label))#734
+    #print(len(Label_hat))#91
+
+    Label=tolist(Label)
+
     for i, label_hat in enumerate(Label_hat):
+
+        label_hat=tolist(label_hat)
+        # print(type(Label))
+        # print(type(label_hat))
+        # print(Label)
+        # print(label_hat)
         accuracy = accuracy_score(Label, label_hat)
         if accuracy > best_accuracy:
             best_accuracy = accuracy
@@ -101,22 +127,25 @@ def calculate_AUC_distance(Label, Label_hat, params_grid):  #不同阈值中寻�
 
 def grid_research(test_subset, module_file):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    criterion = nn.L1Loss()
+    criterion = nn.MSELoss()
 
     hidden_size = 100
     input_size = 1
     num_layers = 2
-    window_size = 10
 
     #候选的阈值
     params_grid = {'threshold': np.arange(0.05, 0.96, 0.01)}
 
     # 加载数据集
+    #test_dataset 和 test_subset 所包含的样本是一样的，只是重新创建了一个新的对象。
     test_dataset = SimpleSubset(test_subset.dataset, test_subset.indices)
 
     # 准备数据加载器
     #这里都没有打乱顺序，所以一个索引对应的数据是关联的
     train_loss_loader, train_label_loader, Label = prepare_data_loaders(test_dataset)
+    # print(Label)
+    # print(len(train_loss_loader))#734
+    # print(len(train_label_loader))#734
 
     # 加载训练好的模型
     model = LSTMAutoencoder(input_size, hidden_size, num_layers)
@@ -124,10 +153,12 @@ def grid_research(test_subset, module_file):
 
     # 测试模型并获取损失列表
     Loss = test_model(model, train_loss_loader, criterion, device)
+    #print(len(Loss))#734
 
     # 生成预测结果
     Label_hat_np = generate_predictions(Loss, params_grid)
 
+    #print(len(Label_hat_np))#91
     # 评估指标
     evaluate_metrics(Label, Label_hat_np, params_grid)
 

@@ -47,6 +47,9 @@ class TimeSeriesDataset(Dataset):
         self.X = torch.tensor(dataset_x, dtype=torch.float32)
         self.y = torch.tensor(dataset_y, dtype=torch.float32)
 
+        self.label=torch.tensor(dataset_label, dtype=torch.float32)
+
+
 
     def __len__(self):
         return len(self.y)
@@ -58,7 +61,7 @@ class TimeSeriesDataset(Dataset):
     def get_test_sample(self, index=None):  #我想实现默认不输入时返回整个列表，但是不传入index时总是报错
         if index is None:
             return self.X, self.y
-        return self.X[index], self.y[index]
+        return self.X[index], self.label[index]
 
 
 def loading_car_hacking(window_size):
@@ -85,8 +88,8 @@ def loading_car_hacking(window_size):
     train_size = int(0.8 * len(car_hacking_dataset))
     test_size = len(car_hacking_dataset) - train_size
     # 使用 random_split 函数将数据集分割成训练集和测试集
-    train_dataset, train_dataset = random_split(car_hacking_dataset, [train_size, test_size])
-    return train_dataset, train_dataset
+    train_dataset, test_dataset = random_split(car_hacking_dataset, [train_size, test_size])
+    return train_dataset, test_dataset
 
 
 def loading_nb15(window_size):

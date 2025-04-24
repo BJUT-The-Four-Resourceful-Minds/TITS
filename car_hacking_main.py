@@ -34,4 +34,5 @@ if __name__ == '__main__':
         #保存模型，后面直接在其他文件读取训练好的模型
         torch.save(model.state_dict(), module_file)
         print('training Done')
-    # grid_research(test_dataset, module_file)
+
+    grid_research(test_dataset, module_file)
