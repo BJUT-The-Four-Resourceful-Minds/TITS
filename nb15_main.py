@@ -13,11 +13,11 @@ if __name__ == '__main__':
     # module setting
     batch_size = 50
     hidden_size = 100
-    epoch = 400
+    epoch = 2000
     window_size = 10
     input_size = 1
     num_layers = 2
-    learning_rate=0.01
+    learning_rate = 0.01
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     module_file = 'nb15_module.pt'
 
