@@ -21,7 +21,8 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     module_file = 'car_hacking_module.pt'
 
-    train_dataset, test_dataset = loading_car_hacking(window_size)
+    train_dataset, test_dataset = loading_car_hacking(window_size,0)
+    test_dataset0, test_dataset1 = loading_car_hacking(window_size, 1)
     if not os.path.exists(module_file):
         print("training module")
         train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
@@ -35,4 +36,5 @@ if __name__ == '__main__':
         torch.save(model.state_dict(), module_file)
         print('training Done')
 
-    grid_research(test_dataset, module_file)
+    grid_research(test_dataset0, module_file)
+    grid_research(test_dataset1,module_file)

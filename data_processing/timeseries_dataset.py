@@ -64,24 +64,31 @@ class TimeSeriesDataset(Dataset):
         return self.X[index], self.label[index]
 
 
-def loading_car_hacking(window_size):
+def loading_car_hacking(window_size,flag):#0训练 1检测
     print("loading data")
     normal_run_path = r'.\Car-Hacking Dataset\normal_run_data\normal_run_data.txt'
-    DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
-    Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
-    RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
-    gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
+    if(flag==1):
+        DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
+        Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
+        RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
+        gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
 
     normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
-    DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
-    RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
-    gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
-    Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
+    if(flag==1):
+        DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
+        RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
+        gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
+        Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
 
     print('loading success')
 
-    car_hacking_dataset = SimpleConcatDataset(
+    if (flag == 1):
+        car_hacking_dataset = SimpleConcatDataset(
         [normal_run_dataset, DoS_dataset_dataset, RPM_dataset_dataset, gear_dataset_dataset, Fuzzy_dataset_dataset])
+    if(flag==0):
+        car_hacking_dataset = SimpleConcatDataset(
+            [normal_run_dataset])
+
 
     # car_hacking_dataset = normal_run_dataset
 

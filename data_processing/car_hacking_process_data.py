@@ -8,8 +8,9 @@ def clean_data(data):
     data_new = data
     data = data.astype(str)
     data_new.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]] = data.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]]
-    data_new = data_new.iloc[:, 0:3]
+    data_new = data_new.iloc[:, [0,1,2,-1]]
     data_new = data_new.dropna(axis=0)
+
     return data_new
 
 
@@ -31,6 +32,8 @@ def car_hacking_process_data(file_path):
         return
 
     data = clean_data(file)
+
+    #print(data)
     result = []
     data_array = data.values  # 转换为 numpy 数组
     t = data_array[0][0]

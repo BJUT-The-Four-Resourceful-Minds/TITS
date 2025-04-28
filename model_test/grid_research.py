@@ -1,30 +1,61 @@
 import torch
 import numpy as np
+from tensorflow.python.ops.metrics_impl import precision
 from torch import nn
 from module.LSTM import LSTMAutoencoder
 from torch.utils.data import DataLoader
 from model_test.CustomClass import SimpleSubset, CustomDataset
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
+import matplotlib.pyplot as plt
 
 
 def AUC(y_true, y_pred):  #计算AUC指标 输入真指标与预测指标两个列表 指标的集合含义是距离左上角的距离
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred,labels=[0,1]).ravel()
     if(tp + fn==0 or fp + tn==0):
-        return 1
+        return 0
     else:
         tpr = tp / (tp + fn)
         fpr = fp / (fp + tn)
         return np.sqrt((1 - tpr) ** 2 + fpr ** 2)
 
+def myf1_score(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+
+    if (tp + fn == 0 or fp + tn == 0):
+        return 0
+    else:
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1=2 * precision * recall / (precision + recall)
+        accuracy=(tp+tn)/(tp+tn+fp+fn)
+        return 2 * precision * recall / (precision + recall),[precision,recall,f1,accuracy]
+
+
+def myaccuracy_score(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+
+    if (tp + fn == 0 or fp + tn == 0):
+        return 0
+    else:
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1 = 2 * precision * recall / (precision + recall)
+        accuracy = (tp + tn) / (tp + tn + fp + fn)
+        return (tp+tn)/(tp+tn+fp+fn),[precision,recall,f1,accuracy]
 
 def g_mean(y_true, y_pred):  #计算G_Mean指标 输入真指标与预测指标两个列表
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred,labels=[0,1]).ravel()
+
     if(tp + fn==0 or fp + tn==0):
-        return 1
+        return 0
     else:
         tpr = tp / (tp + fn)
         fpr = fp / (fp + tn)
-        return np.sqrt(tpr * (1 - fpr))
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1 = 2 * precision * recall / (precision + recall)
+        accuracy = (tp + tn) / (tp + tn + fp + fn)
+        return np.sqrt(tpr * (1 - fpr)),[precision,recall,f1,accuracy]
 
 
 def prepare_data_loaders(train_dataset):  #返回（X,Label)的数据集
@@ -73,8 +104,7 @@ def tolist(array):
         my_list.append(element)
     return my_list
 
-
-def evaluate_metrics(Label, Label_hat, params_grid):
+def evaluate_metrics(Label, Label_hat, params_grid,result):
     #不同阈值中寻找，不同指标分别达到最大时阈值的值
     best_accuracy = 0
     best_accuracy_threshold = 0
@@ -95,24 +125,35 @@ def evaluate_metrics(Label, Label_hat, params_grid):
         # print(type(label_hat))
         # print(Label)
         # print(label_hat)
-        accuracy = accuracy_score(Label, label_hat)
+        accuracy, best_acc_ar = myaccuracy_score(Label, label_hat)
+        #print("accuracy:",accuracy)
         if accuracy > best_accuracy:
             best_accuracy = accuracy
             best_accuracy_threshold = params_grid['threshold'][i]
+            result["accuracy"]=best_acc_ar
 
-        f1 = f1_score(Label, label_hat)
+
+        f1,best_f1_ar= myf1_score(Label, label_hat)
+        #print("f1:",f1)
         if f1 > best_f1:
             best_f1 = f1
             best_f1_threshold = params_grid['threshold'][i]
+            result["f1"]=best_f1_ar
 
-        gmean = g_mean(Label, label_hat)
+        gmean,best_gmean_ar = g_mean(Label, label_hat)
+        #print("gmean:",gmean)
         if gmean > best_gmean:
             best_gmean = gmean
             best_gmean_threshold = params_grid['threshold'][i]
+            result["gmean"]=best_gmean_ar
 
-    print("准确率最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_accuracy, best_accuracy_threshold))
-    print("F1 分数最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_f1, best_f1_threshold))
-    print("G - Mean 最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_gmean, best_gmean_threshold))
+    result["accuracy"].append(best_accuracy)
+    result["accuracy"].append(best_accuracy_threshold)
+    result["f1"].append(best_f1)
+    result["f1"].append(best_f1_threshold)
+    result["gmean"].append(best_gmean)
+    result["gmean"].append(best_gmean_threshold)
+
 
 
 def calculate_AUC_distance(Label, Label_hat, params_grid):  #不同阈值中寻找，AUC指标达到最大时阈值的值
@@ -121,8 +162,8 @@ def calculate_AUC_distance(Label, Label_hat, params_grid):  #不同阈值中寻�
         AUC_distance.append(AUC(Label, Label_hat[i]))
     AUC_min = min(AUC_distance)
     AUC_index = np.argmin(AUC_distance)
-    print(f"最小值是 {AUC_min}，对应的索引是 {AUC_index}")
-    print(f"最佳阈值:{params_grid['threshold'][AUC_index]}")
+    print(f"auc最小值是 {AUC_min}，对应的索引是 {AUC_index}")
+    print(f"auc对应最佳阈值:{params_grid['threshold'][AUC_index]}")
 
 
 def grid_research(test_subset, module_file):
@@ -133,9 +174,6 @@ def grid_research(test_subset, module_file):
     input_size = 1
     num_layers = 2
 
-    #候选的阈值
-    params_grid = {'threshold': np.arange(0.05, 0.96, 0.01)}
-
     # 加载数据集
     #test_dataset 和 test_subset 所包含的样本是一样的，只是重新创建了一个新的对象。
     test_dataset = SimpleSubset(test_subset.dataset, test_subset.indices)
@@ -143,6 +181,8 @@ def grid_research(test_subset, module_file):
     # 准备数据加载器
     #这里都没有打乱顺序，所以一个索引对应的数据是关联的
     train_loss_loader, train_label_loader, Label = prepare_data_loaders(test_dataset)
+    #print(Label)
+
     # print(Label)
     # print(len(train_loss_loader))#734
     # print(len(train_label_loader))#734
@@ -153,14 +193,49 @@ def grid_research(test_subset, module_file):
 
     # 测试模型并获取损失列表
     Loss = test_model(model, train_loss_loader, criterion, device)
-    #print(len(Loss))#734
+    loss_ar=show_Loss(Loss,Label)
 
+    max_value = np.amax(loss_ar)
+    min_value = np.amin(loss_ar)
+
+    #候选的阈值从loss的最小值到最大值 90等分
+    params_grid = {'threshold': np.arange(min_value, max_value,(max_value-min_value)/90)}
+    #print(params_grid)
     # 生成预测结果
     Label_hat_np = generate_predictions(Loss, params_grid)
 
-    #print(len(Label_hat_np))#91
+    result = {"accuracy": [], "f1": [], "gmean": []}
     # 评估指标
-    evaluate_metrics(Label, Label_hat_np, params_grid)
+    evaluate_metrics(Label, Label_hat_np, params_grid,result)
+    #print(result)
 
     # 计算 AUC 距离
     calculate_AUC_distance(Label, Label_hat_np, params_grid)
+
+    print("准确率最大值: {:.4f}, 对应的阈值: {:.4f},precision:{:.4f},recal:{:.4f},f1:{:.4f},acc:{:.4f}".format(result["accuracy"][4],result["accuracy"][5],result["accuracy"][0],result["accuracy"][1],result["accuracy"][2],result["accuracy"][3]))
+    print("f1最大值: {:.4f}, 对应的阈值: {:.4f},precision:{:.4f},recal:{:.4f},f1:{:.4f},acc:{:.4f}".format(result["f1"][4],result["f1"][5],result["f1"][0],result["f1"][1],result["f1"][2],result["f1"][3]))
+    print("gmean最大值: {:.4f}, 对应的阈值: {:.4f},precision:{:.4f},recal:{:.4f},f1:{:.4f},acc:{:.4f}".format(result["f1"][4],result["f1"][5],result["gmean"][0],result["gmean"][1],result["gmean"][2],result["gmean"][3]))
+
+    # print("F1 分数最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_f1, best_f1_threshold))
+    # print("G - Mean 最大值: {:.4f}, 对应的阈值: {:.4f}".format(best_gmean, best_gmean_threshold))
+
+
+def show_Loss(loss,labels):
+    length=len(loss)
+    x=np.arange(length)
+    loss_ar = np.array([tensor.detach().numpy() for tensor in loss])
+    sample_color=[]
+    widths=[]
+    for label in labels:
+        if label==0:
+            sample_color.append("red")
+            widths.append(1)
+        else:
+            sample_color.append("green")
+            widths.append(1)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(x,loss_ar,color=sample_color,width=widths)
+    ax.set_yscale('log')
+    plt.show()
+    return loss_ar
