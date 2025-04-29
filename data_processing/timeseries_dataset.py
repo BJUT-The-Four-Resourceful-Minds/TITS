@@ -1,11 +1,11 @@
 import numpy as np
 import torch
-from torch.utils.data import Dataset, random_split
+from torch.utils.data import Dataset, random_split, Subset
 
 from NLT.NLT_main import likelihood_transformation
 from data_processing.car_hacking_process_data import car_hacking_process_data
 from data_processing.nb15_process_data import nb15_process_data
-from model_test.CustomClass import SimpleConcatDataset
+from model_test.CustomClass import SimpleConcatDataset, SimpleSubset
 
 
 # 将特征提取后的数据转变为可供训练的Dataset类
@@ -37,19 +37,19 @@ class TimeSeriesDataset(Dataset):
             dataset_x.append(_x)
             dataset_y.append(features[i + window_size])
             # label中1是正常0是攻击
+            has_attack = False
+            # 检查窗口内的每个标签
             for j in range(window_size):
-                if (label[i + j] == 0):  #10个中只要有一个为攻击则标记为攻击
-                    dataset_label.append(0)
-                else:
-                    dataset_label.append(1)
+                if label[i + j] == 0:
+                    has_attack = True
+                    break
+            dataset_label.append(0 if has_attack else 1)  # 0=攻击，1=正常
 
         # 转换为 PyTorch 张量
         self.X = torch.tensor(dataset_x, dtype=torch.float32)
         self.y = torch.tensor(dataset_y, dtype=torch.float32)
 
-        self.label=torch.tensor(dataset_label, dtype=torch.float32)
-
-
+        self.label = torch.tensor(dataset_label, dtype=torch.float32)
 
     def __len__(self):
         return len(self.y)
@@ -60,43 +60,31 @@ class TimeSeriesDataset(Dataset):
     #用于返回（X,label） 用来与判断出的类别比对
     def get_test_sample(self, index=None):  #我想实现默认不输入时返回整个列表，但是不传入index时总是报错
         if index is None:
-            return self.X, self.y
+            return self.X, self.label
         return self.X[index], self.label[index]
 
 
-def loading_car_hacking(window_size,flag):#0训练 1检测
+
+def loading_car_hacking(window_size):
     print("loading data")
     normal_run_path = r'.\Car-Hacking Dataset\normal_run_data\normal_run_data.txt'
-    if(flag==1):
-        DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
-        Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
-        RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
-        gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
+    DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
+    Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
+    RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
+    gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
 
     normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
-    if(flag==1):
-        DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
-        RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
-        gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
-        Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
+    DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
+    RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
+    gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
+    Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
 
     print('loading success')
 
-    if (flag == 1):
-        car_hacking_dataset = SimpleConcatDataset(
+    car_hacking_dataset = SimpleConcatDataset(
         [normal_run_dataset, DoS_dataset_dataset, RPM_dataset_dataset, gear_dataset_dataset, Fuzzy_dataset_dataset])
-    if(flag==0):
-        car_hacking_dataset = SimpleConcatDataset(
-            [normal_run_dataset])
 
-
-    # car_hacking_dataset = normal_run_dataset
-
-    train_size = int(0.8 * len(car_hacking_dataset))
-    test_size = len(car_hacking_dataset) - train_size
-    # 使用 random_split 函数将数据集分割成训练集和测试集
-    train_dataset, test_dataset = random_split(car_hacking_dataset, [train_size, test_size])
-    return train_dataset, test_dataset
+    return car_hacking_dataset
 
 
 def loading_nb15(window_size):
@@ -117,3 +105,15 @@ def loading_nb15(window_size):
     # 使用 random_split 函数将数据集分割成训练集和测试集
     train_dataset, test_dataset = random_split(nb15_dataset, [train_size, test_size])
     return train_dataset, test_dataset
+
+
+def dataClassifier(dataset):
+    for i in range(len(dataset)):
+        print(dataset.get_test_sample(i)[1])
+    indices_0 = [i for i in range(len(dataset)) if dataset.get_test_sample(i)[1] == 0]
+    indices_1 = [i for i in range(len(dataset)) if dataset.get_test_sample(i)[1] == 1]
+    # 步骤2：创建子集
+    attack_dataset = SimpleSubset(dataset, indices_0)
+    normal_dataset = SimpleSubset(dataset, indices_1)
+
+    return normal_dataset, attack_dataset
