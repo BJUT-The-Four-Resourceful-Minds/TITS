@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader, random_split
 
 from data_processing.timeseries_dataset import loading_car_hacking, dataClassifier
 from model_test.CustomClass import SimpleConcatDataset
+from model_test.Custom_split import my_random_split
 from model_test.grid_research import grid_research
 from model_test.value_display import value_display
 from module.LSTM import LSTMAutoencoder, train_model
@@ -27,7 +28,8 @@ if __name__ == '__main__':
 
     train_size = int(0.8 * len(normal_dataset))
     test_size = len(normal_dataset) - train_size
-    train_dataset, test_normal_dataset = random_split(normal_dataset, [train_size, test_size])
+    train_dataset, test_normal_dataset = my_random_split(normal_dataset, [train_size, test_size])
+
     test_dataset = SimpleConcatDataset([test_normal_dataset, attack_dataset])
 
     if not os.path.exists(module_file):
