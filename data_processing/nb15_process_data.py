@@ -44,7 +44,7 @@ def nb15_process_data(file_path):
         # 我没有找到label,自己写了一个
         flag = 0 if (temp_data[48] == 1).any() else 1
         # 将当前时间窗口的统计结果添加到结果列表中
-        if len(temp_data)>40:
+        if len(temp_data) > 40:
             result.append(temp_res)
             label.append(flag)
 

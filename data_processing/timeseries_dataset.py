@@ -33,7 +33,7 @@ class TimeSeriesDataset(Dataset):
         dataset_x, dataset_y = [], []
         dataset_label = []
         for i in range(len(features) - window_size):
-            _x = features[i:(i + 10)]
+            _x = features[i:(i + window_size)]
             dataset_x.append(_x)
             dataset_y.append(features[i + window_size])
             # label中1是正常0是攻击
@@ -48,7 +48,6 @@ class TimeSeriesDataset(Dataset):
         # 转换为 PyTorch 张量
         self.X = torch.tensor(dataset_x, dtype=torch.float32)
         self.y = torch.tensor(dataset_y, dtype=torch.float32)
-
         self.label = torch.tensor(dataset_label, dtype=torch.float32)
 
     def __len__(self):
@@ -100,16 +99,12 @@ def loading_nb15(window_size):
 
     nb15_dataset = SimpleConcatDataset([nb15_1, nb15_2, nb15_3, nb15_4])
 
-    train_size = int(0.8 * len(nb15_dataset))
-    test_size = len(nb15_dataset) - train_size
-    # 使用 random_split 函数将数据集分割成训练集和测试集
-    train_dataset, test_dataset = random_split(nb15_dataset, [train_size, test_size])
-    return train_dataset, test_dataset
+    return nb15_dataset
 
 
 def dataClassifier(dataset):
-    for i in range(len(dataset)):
-        print(dataset.get_test_sample(i)[1])
+    # for i in range(len(dataset)):
+    #     print(dataset.get_test_sample(i)[1])
     indices_0 = [i for i in range(len(dataset)) if dataset.get_test_sample(i)[1] == 0]
     indices_1 = [i for i in range(len(dataset)) if dataset.get_test_sample(i)[1] == 1]
     # 步骤2：创建子集

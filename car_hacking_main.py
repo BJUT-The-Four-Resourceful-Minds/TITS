@@ -19,7 +19,7 @@ if __name__ == '__main__':
     window_size = 10
     input_size = 1
     num_layers = 2
-    learning_rate = 0.01
+    learning_rate = 0.1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     module_file = 'car_hacking_module.pt'
 
@@ -28,18 +28,23 @@ if __name__ == '__main__':
 
     train_size = int(0.8 * len(normal_dataset))
     test_size = len(normal_dataset) - train_size
-    train_dataset, test_normal_dataset = my_random_split(normal_dataset, [train_size, test_size])
+    train_normal_dataset, test_norma_dataset = my_random_split(normal_dataset, [train_size, test_size])
 
-    test_dataset = SimpleConcatDataset([test_normal_dataset, attack_dataset])
+    train_size = int(0.8 * len(attack_dataset))
+    test_size = len(attack_dataset) - train_size
+    train_attack_dataset, test_attack_dataset = my_random_split(attack_dataset, [train_size, test_size])
+
+    test_dataset = SimpleConcatDataset([test_norma_dataset, test_attack_dataset])
+
     model = LSTMAutoencoder(input_size, hidden_size, num_layers)
 
     if not os.path.exists(module_file):
         print("training module")
-        train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
+        train_loader = DataLoader(train_normal_dataset, batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size, shuffle=True)
         criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
-        model = train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
+        model = train_model(model, train_loader, criterion, optimizer, epoch, device)
         value_display(model, test_loader)
         #保存模型，后面直接在其他文件读取训练好的模型
         # torch.save(model.state_dict(), module_file)

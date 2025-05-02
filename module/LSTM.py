@@ -18,7 +18,7 @@ class LSTMAutoencoder(nn.Module):
 
 
 # 训练函数
-def train_model(model, train_loader, test_loader, criterion, optimizer, epochs, device):
+def train_model(model, train_loader, criterion, optimizer, epochs, device):
     model.to(device)
     for epoch in range(epochs):
         running_loss = 0.0
