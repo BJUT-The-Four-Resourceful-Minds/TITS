@@ -3,15 +3,15 @@ import pandas as pd
 
 
 # 针对car_hacking Dataset的数据进行数据清洗
-def clean_data(data):
+def clean_data(data,attack):
     # data = data.dropna(axis=0) // 该操作将有用信息全部删除了
-    data_new = data
-    data = data.astype(str)
-    data_new.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]] = data.loc[:, [1, 3, 4, 5, 6, 7, 8, 9, 10]]
-    data_new = data_new.iloc[:, [0,1,2,-1]]
-    data_new = data_new.dropna(axis=0)
-
-    return data_new
+    result = data[[0, 1, 2]].copy()
+    if attack:
+        col2_plus_2 = data[2] + 3
+        result[3] = [data.loc[i, col] if col in data.columns else None
+                     for i, col in enumerate(col2_plus_2)]
+    result = result.dropna(axis=0)
+    return result
 
 
 # 对car_hacking Dataset数据进行预处理和特征提取
@@ -31,7 +31,7 @@ def car_hacking_process_data(file_path):
         print("file_path不规范")
         return
 
-    data = clean_data(file)
+    data = clean_data(file,attack)
 
     #print(data)
     result = []
