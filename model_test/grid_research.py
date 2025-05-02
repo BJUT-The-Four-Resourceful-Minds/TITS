@@ -158,7 +158,7 @@ def calculate_AUC_distance(Label, Label_hat, params_grid):  #不同阈值中寻�
     print(f"auc对应最佳阈值:{params_grid['threshold'][AUC_index]}")
 
 
-def grid_research(test_subset, module_file):
+def grid_research(test_subset, model):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
 
@@ -166,16 +166,9 @@ def grid_research(test_subset, module_file):
     input_size = 1
     num_layers = 2
 
-    # 加载数据集
-    #test_dataset 和 test_subset 所包含的样本是一样的，只是重新创建了一个新的对象。
-
     # 准备数据加载器
     #这里都没有打乱顺序，所以一个索引对应的数据是关联的
     train_loss_loader, train_label_loader, Label = prepare_data_loaders(test_subset)
-
-    # 加载训练好的模型
-    model = LSTMAutoencoder(input_size, hidden_size, num_layers)
-    model.load_state_dict(torch.load(f'./{module_file}'))
 
     # 测试模型并获取损失列表
     Loss = test_model(model, train_loss_loader, criterion, device)

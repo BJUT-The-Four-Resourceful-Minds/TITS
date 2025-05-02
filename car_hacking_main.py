@@ -31,18 +31,20 @@ if __name__ == '__main__':
     train_dataset, test_normal_dataset = my_random_split(normal_dataset, [train_size, test_size])
 
     test_dataset = SimpleConcatDataset([test_normal_dataset, attack_dataset])
+    model = LSTMAutoencoder(input_size, hidden_size, num_layers)
 
     if not os.path.exists(module_file):
         print("training module")
         train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size, shuffle=True)
-        model = LSTMAutoencoder(input_size, hidden_size, num_layers)
         criterion = nn.MSELoss()
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
         model = train_model(model, train_loader, test_loader, criterion, optimizer, epoch, device)
-        value_display(model, train_loader)
+        value_display(model, test_loader)
         #保存模型，后面直接在其他文件读取训练好的模型
         # torch.save(model.state_dict(), module_file)
         print('training Done')
+    else:
+        model.load_state_dict(torch.load(f'./{module_file}'))
 
-    grid_research(test_dataset, module_file)
+    grid_research(test_dataset, model)
