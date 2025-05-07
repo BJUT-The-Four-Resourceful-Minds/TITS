@@ -11,19 +11,15 @@ from model_test.CustomClass import SimpleConcatDataset, SimpleSubset
 # 将特征提取后的数据转变为可供训练的Dataset类
 class TimeSeriesDataset(Dataset):
     def __init__(self, file_path, window_size):
-        if 'Car-Hacking' in file_path:
-            features, label = car_hacking_process_data(file_path)
-            features = np.array(features)
-        elif 'NB15' in file_path:
-            path = r".\unsw-nb15\versions\1\UNSW-"
-            print(f"loading {file_path}")
-            features, label = nb15_process_data(f"{path}{file_path}.csv")
-            mask = np.isnan(features)
-            mask = mask.any(axis=1)
-            features = features[~mask]
-        else:
-            print('error')
-            return
+        features = []
+        label = []
+        for path in file_path:
+            feature, labels = car_hacking_process_data(path)
+            features += feature
+            label += labels
+
+        features = np.array(features)
+        label = np.array(label)
 
         features = likelihood_transformation(features)
 
@@ -63,7 +59,6 @@ class TimeSeriesDataset(Dataset):
         return self.X[index], self.label[index]
 
 
-
 def loading_car_hacking(window_size):
     print("loading data")
     normal_run_path = r'.\Car-Hacking Dataset\normal_run_data\normal_run_data.txt'
@@ -72,16 +67,19 @@ def loading_car_hacking(window_size):
     RPM_dataset_path = r'.\Car-Hacking Dataset\RPM_dataset.csv'
     gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
 
-    normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
-    DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
-    RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
-    gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
-    Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
+    file_path = [normal_run_path, DoS_dataset_path, Fuzzy_dataset_path, RPM_dataset_path, gear_dataset_path]
+    car_hacking_dataset = TimeSeriesDataset(file_path, window_size)
+
+    # normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
+    # DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
+    # RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
+    # gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
+    # Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
 
     print('loading success')
-
-    car_hacking_dataset = SimpleConcatDataset(
-        [normal_run_dataset, DoS_dataset_dataset, RPM_dataset_dataset, gear_dataset_dataset, Fuzzy_dataset_dataset])
+    #
+    # car_hacking_dataset = SimpleConcatDataset(
+    #     [normal_run_dataset, DoS_dataset_dataset, RPM_dataset_dataset, gear_dataset_dataset, Fuzzy_dataset_dataset])
 
     return car_hacking_dataset
 

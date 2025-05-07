@@ -19,7 +19,7 @@ if __name__ == '__main__':
     window_size = 10
     input_size = 1
     num_layers = 2
-    learning_rate = 0.1
+    learning_rate = 0.03
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     module_file = 'car_hacking_module.pt'
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     test_dataset = SimpleConcatDataset([test_norma_dataset, test_attack_dataset])
 
-    model = LSTMAutoencoder(input_size, hidden_size, num_layers)
+    model = LSTMAutoencoder(input_size, hidden_size, num_layers,device)
 
     if not os.path.exists(module_file):
         print("training module")
