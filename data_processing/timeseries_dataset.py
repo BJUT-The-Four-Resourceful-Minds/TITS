@@ -10,13 +10,26 @@ from model_test.CustomClass import SimpleConcatDataset, SimpleSubset
 
 # 将特征提取后的数据转变为可供训练的Dataset类
 class TimeSeriesDataset(Dataset):
-    def __init__(self, file_path, window_size):
-        features = []
+    def __init__(self, file_path, window_size, data_type):
+        features = None
         label = []
-        for path in file_path:
-            feature, labels = car_hacking_process_data(path)
-            features += feature
-            label += labels
+        print(f"loading {data_type} data")
+        if data_type == "car-hacking":
+            for path in file_path:
+                if features is None:
+                    features, label = car_hacking_process_data(path)
+                else:
+                    feature, labels = car_hacking_process_data(path)
+                    features = np.concatenate([features, feature], axis=0)
+                    label = np.concatenate([label, labels], axis=0)
+        elif data_type == "nb15":
+            for path in file_path:
+                if features is None:
+                    features, label = nb15_process_data(path)
+                else:
+                    feature, labels = nb15_process_data(path)
+                    features = np.concatenate([features, feature], axis=0)
+                    label = np.concatenate([label, labels], axis=0)
 
         features = np.array(features)
         label = np.array(label)
@@ -43,8 +56,10 @@ class TimeSeriesDataset(Dataset):
 
         # 转换为 PyTorch 张量
         self.X = torch.tensor(dataset_x, dtype=torch.float32)
-        self.y = torch.tensor(dataset_y, dtype=torch.float32)
+        self.y = self.X
         self.label = torch.tensor(dataset_label, dtype=torch.float32)
+
+        print(f"{data_type} data loaded")
 
     def __len__(self):
         return len(self.y)
@@ -60,7 +75,6 @@ class TimeSeriesDataset(Dataset):
 
 
 def loading_car_hacking(window_size):
-    print("loading data")
     normal_run_path = r'.\Car-Hacking Dataset\normal_run_data\normal_run_data.txt'
     DoS_dataset_path = r'.\Car-Hacking Dataset\DoS_dataset.csv'
     Fuzzy_dataset_path = r'.\Car-Hacking Dataset\Fuzzy_dataset.csv'
@@ -68,15 +82,13 @@ def loading_car_hacking(window_size):
     gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
 
     file_path = [normal_run_path, DoS_dataset_path, Fuzzy_dataset_path, RPM_dataset_path, gear_dataset_path]
-    car_hacking_dataset = TimeSeriesDataset(file_path, window_size)
+    car_hacking_dataset = TimeSeriesDataset(file_path, window_size,'car-hacking')
 
     # normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
     # DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)
     # RPM_dataset_dataset = TimeSeriesDataset(RPM_dataset_path, window_size)
     # gear_dataset_dataset = TimeSeriesDataset(gear_dataset_path, window_size)
     # Fuzzy_dataset_dataset = TimeSeriesDataset(Fuzzy_dataset_path, window_size)
-
-    print('loading success')
     #
     # car_hacking_dataset = SimpleConcatDataset(
     #     [normal_run_dataset, DoS_dataset_dataset, RPM_dataset_dataset, gear_dataset_dataset, Fuzzy_dataset_dataset])
@@ -85,17 +97,19 @@ def loading_car_hacking(window_size):
 
 
 def loading_nb15(window_size):
-    NB15_1 = "NB15_1"
-    NB15_2 = "NB15_2"
-    NB15_3 = "NB15_3"
-    NB15_4 = "NB15_4"
+    NB15_1 = r"..\unsw-nb15\versions\1\UNSW-NB15_1.csv"
+    NB15_2 = r"..\unsw-nb15\versions\1\UNSW-NB15_2.csv"
+    NB15_3 = r"..\unsw-nb15\versions\1\UNSW-NB15_3.csv"
+    NB15_4 = r"..\unsw-nb15\versions\1\UNSW-NB15_4.csv"
+    file_path = [NB15_1, NB15_2, NB15_3, NB15_4]
+    nb15_dataset = TimeSeriesDataset(file_path, window_size, 'nb15')
 
-    nb15_1 = TimeSeriesDataset(NB15_1, 10)
-    nb15_2 = TimeSeriesDataset(NB15_2, 10)
-    nb15_3 = TimeSeriesDataset(NB15_3, 10)
-    nb15_4 = TimeSeriesDataset(NB15_4, 10)
+    # nb15_1 = TimeSeriesDataset(NB15_1, 10)
+    # nb15_2 = TimeSeriesDataset(NB15_2, 10)
+    # nb15_3 = TimeSeriesDataset(NB15_3, 10)
+    # nb15_4 = TimeSeriesDataset(NB15_4, 10)
 
-    nb15_dataset = SimpleConcatDataset([nb15_1, nb15_2, nb15_3, nb15_4])
+    # nb15_dataset = SimpleConcatDataset([nb15_1, nb15_2, nb15_3, nb15_4])
 
     return nb15_dataset
 

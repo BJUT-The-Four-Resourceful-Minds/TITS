@@ -23,11 +23,11 @@ class LSTMAutoencoder(nn.Module):
         h_enc, c_enc = self.init_hidden(batch_size)
 
         # 编码器前向传播
-        encoder_outputs = []
+        # encoder_outputs = []
         for t in range(seq_len):
             input_t = x[:, t, :]
             h_enc, c_enc = self.encoder(input_t, h_enc, c_enc)
-            encoder_outputs.append(h_enc)
+            # encoder_outputs.append(h_enc)
 
         # 解码器前向传播
         decoder_outputs = []
@@ -43,7 +43,7 @@ class LSTMAutoencoder(nn.Module):
 
         # 返回完整重构序列
         reconstructed = torch.stack(decoder_outputs, dim=1)
-        return reconstructed[:, -1, :]
+        return reconstructed
 
     def init_hidden(self, batch_size):
         # 初始化隐藏状态和细胞状态
@@ -140,5 +140,5 @@ def train_model(model, train_loader, criterion, optimizer, epochs, device):
             batch_count += 1
 
         avg_train_loss = total_loss / batch_count
-        print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}")
+        print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.8f}")
     return model

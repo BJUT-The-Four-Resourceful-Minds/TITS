@@ -2,12 +2,11 @@ import torch
 import numpy as np
 import math
 from torch import nn
-from module.LSTM import LSTMAutoencoder
+from model.LSTM import LSTMAutoencoder
 from torch.utils.data import DataLoader
 from model_test.CustomClass import SimpleSubset, CustomDataset
-from sklearn.metrics import confusion_matrix#accuracy_score, f1_score
+from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
-
 
 
 def AUC(y_true, y_pred):  #计算AUC指标 输入真指标与预测指标两个列表 指标的集合含义是距离左上角的距离
@@ -60,8 +59,8 @@ def g_mean(y_true, y_pred):  #计算G_Mean指标 输入真指标与预测指标�
 
 def prepare_data_loaders(train_dataset):  #返回（X,Label)的数据集
     train_loss_loader = DataLoader(train_dataset)
-    indice=[i for i in range(len(train_dataset))]
-    train_dataset= SimpleSubset(train_dataset,indice)
+    indice = [i for i in range(len(train_dataset))]
+    train_dataset = SimpleSubset(train_dataset, indice)
     X = []
     Label = []
     for i in range(len(train_dataset)):
@@ -178,11 +177,11 @@ def grid_research(test_subset, model):
     min_value = np.amin(loss_ar)
 
     #阈值预设为一个指数增长的序列，如果线性增长
-    max_log=math.log(max_value)
-    min_log=math.log(min_value)
+    max_log = math.log(max_value)
+    min_log = math.log(min_value)
 
     #候选的阈值从loss的最小值到最大值 90等分
-    threshold_ar=np.arange(min_log, max_log, (max_log - min_log) / 90)
+    threshold_ar = np.arange(min_log, max_log, (max_log - min_log) / 90)
     for i in range(len(threshold_ar)):
         threshold_ar[i] = math.exp(threshold_ar[i])
     params_grid = {'threshold': threshold_ar}
@@ -204,6 +203,7 @@ def grid_research(test_subset, model):
     print("gmean最大值: {:.4f}, 对应的阈值: {:.4f},precision:{:.4f},recal:{:.4f},f1:{:.4f},acc:{:.4f}".format(
         result["f1"][4], result["f1"][5], result["gmean"][0], result["gmean"][1], result["gmean"][2],
         result["gmean"][3]))
+
 
 def show_Loss(loss, labels):
     length = len(loss)
