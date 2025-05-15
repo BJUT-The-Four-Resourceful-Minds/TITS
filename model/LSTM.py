@@ -3,12 +3,11 @@ from torch import nn
 
 
 class LSTMAutoencoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, device):
+    def __init__(self, input_size, hidden_size, device):
         super(LSTMAutoencoder, self).__init__()
 
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.num_layers = num_layers
         self.device = device
 
         # 编码器和解码器

@@ -22,6 +22,9 @@ class TimeSeriesDataset(Dataset):
                     feature, labels = car_hacking_process_data(path)
                     features = np.concatenate([features, feature], axis=0)
                     label = np.concatenate([label, labels], axis=0)
+            features = np.array(features)
+            label = np.array(label)
+
         elif data_type == "nb15":
             for path in file_path:
                 if features is None:
@@ -30,11 +33,23 @@ class TimeSeriesDataset(Dataset):
                     feature, labels = nb15_process_data(path)
                     features = np.concatenate([features, feature], axis=0)
                     label = np.concatenate([label, labels], axis=0)
-
-        features = np.array(features)
-        label = np.array(label)
+            features = np.array(features)
+            label = np.array(label)
+            # indices_to_remove = [3, 4, 14786]  # 要丢弃的索引
+            # mask = np.ones(len(features), dtype=bool)
+            # mask[indices_to_remove] = False
+            # features = features[mask]
+            # label = label[mask]
 
         features = likelihood_transformation(features)
+
+        # 数据预处理可视化
+        # from matplotlib import pyplot as plt
+        # import os
+        # os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+        # plt.plot([i for i in range(len(features))], features, label='num')
+        # plt.plot([i for i in range(len(label))], label, label='label')
+        # plt.show()
 
         features = features.reshape(len(features), 1)
 
@@ -82,7 +97,7 @@ def loading_car_hacking(window_size):
     gear_dataset_path = r'.\Car-Hacking Dataset\gear_dataset.csv'
 
     file_path = [normal_run_path, DoS_dataset_path, Fuzzy_dataset_path, RPM_dataset_path, gear_dataset_path]
-    car_hacking_dataset = TimeSeriesDataset(file_path, window_size,'car-hacking')
+    car_hacking_dataset = TimeSeriesDataset(file_path, window_size, 'car-hacking')
 
     # normal_run_dataset = TimeSeriesDataset(normal_run_path, window_size)
     # DoS_dataset_dataset = TimeSeriesDataset(DoS_dataset_path, window_size)

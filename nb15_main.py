@@ -15,10 +15,9 @@ if __name__ == '__main__':
     # model setting
     batch_size = 50
     hidden_size = 100
-    epoch = 500
+    epoch = 2000
     window_size = 10
     input_size = 1
-    num_layers = 2
     learning_rate = 0.001
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     module_file = 'nb15_module.pt'
@@ -35,7 +34,7 @@ if __name__ == '__main__':
     test_size = len(attack_dataset) - train_size
     train_attack_dataset, test_attack_dataset = my_random_split(attack_dataset, [train_size, test_size])
     test_dataset = SimpleConcatDataset([test_norma_dataset, test_attack_dataset])
-    model = LSTMAutoencoder(input_size, hidden_size, num_layers,device)
+    model = LSTMAutoencoder(input_size, hidden_size, device)
 
     if not os.path.exists(module_file):
         print("training model")

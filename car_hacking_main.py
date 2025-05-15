@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     test_dataset = SimpleConcatDataset([test_norma_dataset, test_attack_dataset])
 
-    model = LSTMAutoencoder(input_size, hidden_size, num_layers, device)
+    model = LSTMAutoencoder(input_size, hidden_size, device)
 
     if not os.path.exists(model_file):
         print("training model")
