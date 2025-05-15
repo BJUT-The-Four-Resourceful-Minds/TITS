@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 def AUC(y_true, y_pred):  #计算AUC指标 输入真指标与预测指标两个列表 指标的集合含义是距离左上角的距离
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-    if (tp + fn == 0 or fp + tn == 0):
+    if tp + fn == 0 or fp + tn == 0:
         return 0
     else:
         tpr = tp / (tp + fn)
@@ -21,7 +21,7 @@ def AUC(y_true, y_pred):  #计算AUC指标 输入真指标与预测指标两个�
 
 def myf1_score(y_true, y_pred):
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-    if (tp + fn == 0 or fp + tn == 0):
+    if tp + fn == 0 or fp + tn == 0:
         return 0
     else:
         precision = tp / (tp + fp)
@@ -33,7 +33,7 @@ def myf1_score(y_true, y_pred):
 
 def myaccuracy_score(y_true, y_pred):
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-    if (tp + fn == 0 or fp + tn == 0):
+    if tp + fn == 0 or fp + tn == 0:
         return 0
     else:
         precision = tp / (tp + fp)
@@ -45,7 +45,7 @@ def myaccuracy_score(y_true, y_pred):
 
 def g_mean(y_true, y_pred):  #计算G_Mean指标 输入真指标与预测指标两个列表
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-    if (tp + fn == 0 or fp + tn == 0):
+    if tp + fn == 0 or fp + tn == 0:
         return 0
     else:
         tpr = tp / (tp + fn)
