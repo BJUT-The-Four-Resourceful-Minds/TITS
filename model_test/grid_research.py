@@ -201,7 +201,7 @@ def grid_research(test_subset, model):
     print("f1最大值: {:.4f}, 对应的阈值: {:.4f},precision:{:.4f},recal:{:.4f},f1:{:.4f},acc:{:.4f}".format(
         result["f1"][4], result["f1"][5], result["f1"][0], result["f1"][1], result["f1"][2], result["f1"][3]))
     print("gmean最大值: {:.4f}, 对应的阈值: {:.4f},precision:{:.4f},recal:{:.4f},f1:{:.4f},acc:{:.4f}".format(
-        result["f1"][4], result["f1"][5], result["gmean"][0], result["gmean"][1], result["gmean"][2],
+        result["gmean"][4], result["gmean"][5], result["gmean"][0], result["gmean"][1], result["gmean"][2],
         result["gmean"][3]))
 
 
